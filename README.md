@@ -100,21 +100,41 @@ They work without opening the menu. Pressing the same shortcut again stops playb
 
 In VMware Fusion, click the VM so it owns the keyboard; otherwise the Mac host eats `Win`/`Cmd`.
 
-## Publish a self-contained exe
+## Release packages (permanent)
 
-Inside the VM:
+GitHub **Actions artifacts** expire (often after 90 days). **GitHub Release** assets do not: they stay on
+[Releases](https://github.com/cionz0/boris-bar-windows/releases) until someone deletes them.
 
-```powershell
-dotnet publish src\BorisBar -c Release -r win-arm64 --self-contained true -p:PublishSingleFile=true -o publish\arm64
-dotnet publish src\BorisBar -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish\x64
+Push a SemVer tag from macOS (not from the VM share):
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
 ```
 
-Use `win-arm64` on Fusion/Apple Silicon VMs and `win-x64` on Intel Windows.
+The [Release workflow](.github/workflows/release.yml) builds self-contained `win-x64` and `win-arm64` builds, an Inno Setup installer for each, and attaches them to that tag. No audio files are included.
+
+Locally, inside the VM (optional, same script the workflow uses):
+
+```powershell
+cd Z:\boris-bar-windows
+Set-ExecutionPolicy -Scope Process Bypass
+.\tools\publish.ps1 -All
+.\tools\publish.ps1 -All -Installer   # needs Inno Setup 6
+```
+
+If the `Z:` share is slow, write output to the VM disk:
+
+```powershell
+.\tools\publish.ps1 -All -OutputRoot C:\build\boris-bar
+```
+
+Use the **x64** installer on typical Intel/AMD PCs. Use **arm64** on Windows on ARM (including this Fusion VM).
 
 ## Stack
 
 - .NET 8 / WinForms (`NotifyIcon`)
-- `RegisterHotKey` for `Win+Alt+1–9`
+- Low-level keyboard hook for `Win+Alt+1–9` (`RegisterHotKey` cannot take the Win key)
 - `Windows.Media.Playback.MediaPlayer` (Media Foundation)
 - `%LOCALAPPDATA%\boris-bar\` for user clips (same layout as `~/.local/share/boris-bar` on GNOME)
 

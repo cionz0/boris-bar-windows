@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 namespace BorisBar;
@@ -6,13 +7,22 @@ internal sealed class HotkeyManager : Form
 {
     public const int ClipCount = 9;
 
-    private const int WmHotkey = 0x0312;
-    private const uint ModAlt = 0x0001;
-    private const uint ModWin = 0x0008;
-    private const uint ModNoRepeat = 0x4000;
-    private const uint Vk1 = 0x31;
+    private const int WhKeyboardLl = 13;
+    private const int WmKeyDown = 0x0100;
+    private const int WmSysKeyDown = 0x0104;
+    private const int WmKeyUp = 0x0101;
+    private const int WmSysKeyUp = 0x0105;
+    private const int VkShift = 0x10;
+    private const int VkControl = 0x11;
+    private const int VkMenu = 0x12;
+    private const int VkLWin = 0x5B;
+    private const int VkRWin = 0x5C;
+    private const int Vk1 = 0x31;
+    private const int LlkhfUp = 0x80;
 
-    private readonly bool[] _registered = new bool[ClipCount];
+    private readonly LowLevelKeyboardProc _hookProc;
+    private IntPtr _hook = IntPtr.Zero;
+    private int? _heldDigit;
 
     public event Action<int>? ClipRequested;
 
@@ -25,6 +35,7 @@ internal sealed class HotkeyManager : Form
         Text = "BorisBarHotkeys";
         StartPosition = FormStartPosition.Manual;
         Location = new Point(-32000, -32000);
+        _hookProc = HookCallback;
     }
 
     protected override bool ShowWithoutActivation => true;
@@ -39,27 +50,22 @@ internal sealed class HotkeyManager : Form
         base.SetVisibleCore(false);
     }
 
-    public IReadOnlyList<int> RegisterWinAltNumberDefaults()
+    public bool InstallWinAltNumberHook()
     {
         _ = Handle;
-        var failed = new List<int>();
-        uint modifiers = ModAlt | ModWin | ModNoRepeat;
-
-        for (int i = 0; i < ClipCount; i++)
+        if (_hook != IntPtr.Zero)
         {
-            int id = i + 1;
-            uint vk = Vk1 + (uint)i;
-            if (RegisterHotKey(Handle, id, modifiers, vk))
-            {
-                _registered[i] = true;
-            }
-            else
-            {
-                failed.Add(id);
-            }
+            return true;
         }
 
-        return failed;
+        using var process = Process.GetCurrentProcess();
+        var moduleName = process.MainModule?.ModuleName;
+        IntPtr module = string.IsNullOrEmpty(moduleName)
+            ? IntPtr.Zero
+            : GetModuleHandle(moduleName);
+
+        _hook = SetWindowsHookEx(WhKeyboardLl, _hookProc, module, 0);
+        return _hook != IntPtr.Zero;
     }
 
     public void PostToUi(Action action)
@@ -74,40 +80,87 @@ internal sealed class HotkeyManager : Form
         }
     }
 
-    protected override void WndProc(ref Message m)
+    private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
     {
-        if (m.Msg == WmHotkey)
+        if (nCode >= 0)
         {
-            int id = m.WParam.ToInt32();
-            if (id is >= 1 and <= ClipCount)
+            int msg = wParam.ToInt32();
+            var info = Marshal.PtrToStructure<KbdLlHookStruct>(lParam);
+            int vk = info.VkCode;
+            bool isDigit = vk is >= Vk1 and <= (Vk1 + 8);
+            bool keyDown = msg is WmKeyDown or WmSysKeyDown;
+            bool keyUp = msg is WmKeyUp or WmSysKeyUp || (info.Flags & LlkhfUp) != 0;
+
+            if (isDigit && keyUp)
             {
-                ClipRequested?.Invoke(id - 1);
+                if (_heldDigit == vk)
+                {
+                    _heldDigit = null;
+                }
+            }
+            else if (isDigit && keyDown && IsWinAltOnly())
+            {
+                if (_heldDigit == vk)
+                {
+                    return (IntPtr)1;
+                }
+
+                _heldDigit = vk;
+                int index = vk - Vk1;
+                PostToUi(() => ClipRequested?.Invoke(index));
+                return (IntPtr)1;
             }
         }
 
-        base.WndProc(ref m);
+        return CallNextHookEx(_hook, nCode, wParam, lParam);
     }
+
+    private static bool IsWinAltOnly()
+    {
+        bool win = IsDown(VkLWin) || IsDown(VkRWin);
+        bool alt = IsDown(VkMenu);
+        bool ctrl = IsDown(VkControl);
+        bool shift = IsDown(VkShift);
+        return win && alt && !ctrl && !shift;
+    }
+
+    private static bool IsDown(int vk) => (GetAsyncKeyState(vk) & 0x8000) != 0;
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing)
+        if (disposing && _hook != IntPtr.Zero)
         {
-            for (int i = 0; i < ClipCount; i++)
-            {
-                if (_registered[i] && IsHandleCreated)
-                {
-                    UnregisterHotKey(Handle, i + 1);
-                    _registered[i] = false;
-                }
-            }
+            UnhookWindowsHookEx(_hook);
+            _hook = IntPtr.Zero;
         }
 
         base.Dispose(disposing);
     }
 
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+    private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct KbdLlHookStruct
+    {
+        public int VkCode;
+        public int ScanCode;
+        public int Flags;
+        public int Time;
+        public IntPtr ExtraInfo;
+    }
 
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+    private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    private static extern IntPtr GetModuleHandle(string lpModuleName);
+
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int vKey);
 }

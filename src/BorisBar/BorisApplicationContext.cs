@@ -33,13 +33,12 @@ internal sealed class BorisApplicationContext : ApplicationContext
                 _tray.ShowBalloonTip(5000, "Boris Bar", message, ToolTipIcon.Error));
 
         _hotkeys.ClipRequested += PlayBuiltInIndex;
-        var failed = _hotkeys.RegisterWinAltNumberDefaults();
-        if (failed.Count > 0)
+        if (!_hotkeys.InstallWinAltNumberHook())
         {
             _tray.ShowBalloonTip(
                 5000,
                 "Boris Bar",
-                "Alcuni shortcut Win+Alt sono già in uso: " + string.Join(", ", failed.Select(i => "Win+Alt+" + i)),
+                "Impossibile registrare gli hotkey globali Win+Alt+1–9.",
                 ToolTipIcon.Warning);
         }
 

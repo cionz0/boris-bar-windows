@@ -69,6 +69,24 @@ function Find-SevenZip {
     return $null
 }
 
+function Expand-SevenZipArchive {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Archive,
+        [Parameter(Mandatory = $true)]
+        [string]$OutDir
+    )
+
+    New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
+
+    # macOS DMGs contain an Applications symlink. Creating it on Windows
+    # requires SeCreateSymbolicLinkPrivilege and 7-Zip then exits 2.
+    & $sevenZip x -y "-o$OutDir" "-snl-" "-xr!Applications" $Archive 2>&1 | Out-Null
+    if ($LASTEXITCODE -eq 7) {
+        & $sevenZip x -y "-o$OutDir" "-xr!Applications" $Archive 2>&1 | Out-Null
+    }
+}
+
 $curl = Get-Command "curl.exe" -ErrorAction SilentlyContinue
 if (-not $curl) {
     Write-Error "curl.exe is required (included with Windows 10 1803+)."
@@ -94,17 +112,23 @@ try {
     }
 
     Write-Host "Extracting DMG"
-    & $sevenZip x -y "-o$extractDir" $dmgPath | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "7-Zip failed to extract the DMG (exit code $LASTEXITCODE)."
+    Expand-SevenZipArchive -Archive $dmgPath -OutDir $extractDir
+
+    $innerImages = @(Get-ChildItem -LiteralPath $extractDir -Recurse -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Extension -match '^\.(hfs|img|iso)$' })
+    $innerIndex = 0
+    foreach ($image in $innerImages) {
+        $innerIndex++
+        $innerOut = Join-Path $extractDir ("volume-" + $innerIndex)
+        Write-Host "Extracting inner volume $($image.Name)"
+        Expand-SevenZipArchive -Archive $image.FullName -OutDir $innerOut
     }
 
     $extensions = @(".mp3", ".mp4", ".m4a", ".wav", ".aiff", ".aif", ".caf", ".ogg")
-    $files = Get-ChildItem -LiteralPath $extractDir -Recurse -File | Where-Object {
-        $extensions -contains $_.Extension.ToLowerInvariant()
-    }
+    $files = @(Get-ChildItem -LiteralPath $extractDir -Recurse -File -ErrorAction SilentlyContinue |
+        Where-Object { $extensions -contains $_.Extension.ToLowerInvariant() })
 
-    if (-not $files) {
+    if ($files.Count -eq 0) {
         Write-Error "No audio clips were found in the extracted DMG."
     }
 
