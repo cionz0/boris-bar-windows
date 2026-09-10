@@ -1,6 +1,7 @@
 MIT License
 
 Copyright (c) 2026 Emilio Coppa
+Copyright (c) 2026 Vincenzo Roselli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +25,19 @@ SOFTWARE.
 
 THIRD-PARTY CONTENT DISCLAIMER
 
-The MIT license above applies EXCLUSIVELY to the GNOME extension source
+The MIT license above applies EXCLUSIVELY to the Windows application source
 code, assets and documentation authored for this repository by Emilio Coppa.
 
 Credit is preserved for the original Boris Bar macOS app concept created by
-Andrea Ricciotti / PunxCode, which inspired this GNOME Shell adaptation.
+Andrea Ricciotti / PunxCode, and for the GNOME Shell port this Windows app
+is forked from.
 
-Audio clips (.mp3 / .mp4 / .m4a / .wav) referenced by or bundled with this
-project are NOT covered by this license. These clips are short excerpts from
-the Italian television series "Boris" (2007-2022), which is the intellectual
-property of its respective rights holders, including but not limited to:
+This Windows repository does not attach or redistribute audio files.
+Any clips an end user imports locally (for example from the original macOS
+DMG) are NOT covered by this license. Those clips are short excerpts from
+the Italian television series "Boris" (2007-2022), which is the
+intellectual property of its respective rights holders, including but not
+limited to:
 
   - RAI (Radiotelevisione Italiana)
   - Wildside S.r.l.
@@ -43,9 +47,7 @@ property of its respective rights holders, including but not limited to:
   - The original authors: Giacomo Ciarrapico, Luca Vendruscolo, Mattia Torre
   - The original cast and production team
 
-The audio clips included in binary distributions (e.g. the DMG attached to
-GitHub Releases) were sourced from publicly available YouTube uploads by
-third parties. They are included solely for demonstration, tribute, satire,
+They may be used locally solely for demonstration, tribute, satire,
 criticism, commentary and educational purposes, under the principles of
 fair use (17 U.S.C. § 107, USA) and fair dealing / copyright exceptions for
 criticism, review, caricature, parody and pastiche as defined by:
@@ -68,7 +70,7 @@ referenced or reproduced belong to their respective owners.
 TAKEDOWN POLICY / DMCA CONTACT. If you are a rights holder and wish to
 have any content removed, contact the author directly:
 
-  Issues:  https://github.com/ercoppa/boris-bar-gnome-extension/issues
+  Issues:  https://github.com/cionz0/boris-bar-windows/issues
 
 Removal requests will be honored promptly and in good faith, within 24
 hours of receipt, without contestation.

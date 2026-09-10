@@ -1,153 +1,135 @@
-# 🐟 Boris Bar (GNOME Shell Extension)
+# Boris Bar (Windows)
 
-> ⚠️ **FAN PROJECT NON COMMERCIALE — NON-COMMERCIAL FAN PROJECT**  
-> Questo è un progetto amatoriale gratuito, open source, senza scopo di lucro né valore commerciale, creato da un fan della serie *Boris* per uso personale e di altri fan. Non è affiliato, sponsorizzato, approvato o in alcun modo connesso con RAI, Wildside, Sky, Mediaset, Disney+, o con gli autori, registi, interpreti o detentori dei diritti della serie. Tutti i marchi, titoli, personaggi, dialoghi e opere derivate sono proprietà dei rispettivi titolari.  
-> Questo repository e questa estensione **non distribuiscono alcun file audio**: forniscono esclusivamente il riproduttore e l'integrazione GNOME Shell. Ottenere eventuali clip audio e verificarne la legittima disponibilità per l'uso locale è **responsabilità esclusiva dell'utente**.  
-> **Nessun ricavo, donazione, pubblicità o monetizzazione è associato a questo progetto.**  
-> Se sei il titolare dei diritti e desideri la rimozione dei contenuti, apri una [issue](https://github.com/ercoppa/boris-bar-gnome-extension/issues): i file verranno rimossi tempestivamente.
+> **NON-COMMERCIAL FAN PROJECT**  
+> This is a free, amateur, open-source, non-profit fan project inspired by the Italian TV series *Boris*. It is not affiliated with, sponsored by, approved by, or connected to RAI, Wildside, Sky, Mediaset, Disney+, or the authors, directors, cast, or rights holders of the series.  
+> This repository **does not distribute audio files**. It only provides a tray player and global hotkeys. Obtaining clips and checking that local use is lawful is **the user's sole responsibility**.  
+> **No revenue, donations, advertising, or monetization** is associated with this project.
 
----
+Windows 10/11 tray app at [cionz0/boris-bar-windows](https://github.com/cionz0/boris-bar-windows), based on Emilio Coppa's [GNOME Shell extension](https://github.com/ercoppa/boris-bar-gnome-extension). The original *Boris Bar* concept comes from [Andrea Ricciotti's macOS app](https://github.com/andrearicciotti1/boris-bar).
 
-Estensione per GNOME Shell 45-49 ispirata alla serie TV italiana *Boris*. Fornisce un riproduttore di clip audio con shortcut globali direttamente dal pannello superiore, ma **non include né redistribuisce file audio**.
+Zero extra NuGet dependencies. .NET 8, WinForms tray icon, Windows Media Foundation for playback.
 
-Il concept originale di *Boris Bar* nasce dall'[app per macOS](https://github.com/andrearicciotti1/boris-bar) realizzata da **Andrea Ricciotti**, qui citata come ispirazione originaria del progetto.
+## Features
 
-Zero dipendenze esterne, basato interamente su GJS, GStreamer (nativo in GNOME) e GTK4.
+- Goldfish icon in the notification area (system tray)
+- 9 built-in clips with global hotkeys `Win+Alt+1` … `Win+Alt+9`
+- Custom sounds in `%LOCALAPPDATA%\boris-bar\custom\`
+- Max duration 30 seconds; press the same hotkey again (or the same menu item) to stop
+- Optional start with Windows (parity with a GNOME extension that loads at login)
 
----
+## Requirements
 
-## ✨ Features
+- Windows 10 version 1809 (build 17763) or later, or Windows 11
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) to build (`dotnet run` / `dotnet publish`)
+- For the optional DMG import: [7-Zip](https://www.7-zip.org/) and `curl.exe` (already on Windows 10 1803+)
 
-- 🎣 Icona pesce rosso nel pannello GNOME
-- 🎧 9 clip audio con shortcut globali predefiniti (`<Super><Alt>1` … `<Super><Alt>9`), personalizzabili tramite `dconf`
-- ➕ Carica i tuoi suoni personalizzati nella cartella `~/.local/share/boris-bar/custom/`
-- ⏱ Durata max 30s per clip, toggle start/stop premendo di nuovo lo shortcut o cliccando dal menu
+x64 and ARM64 guests are both fine. On VMware Fusion on Apple Silicon, use an ARM64 Windows VM and run `dotnet run` inside the guest (it targets the VM architecture automatically).
 
----
+## Run from the Fusion shared folder
 
-## 📦 Installazione
+This repo is meant to live on the Mac host and appear in the Windows VM via a VMware Fusion shared folder. With `/Users/cionzo/Desktop/boris` mapped to `Z:\`, the project is `Z:\boris-bar-windows`.
 
-### Installazione Manuale
+1. Install the .NET 8 SDK in the VM.
+2. In a normal PowerShell window inside the VM:
 
-1. Clona questo repository all'interno della cartella delle estensioni di GNOME:
-   ```bash
-   git clone https://github.com/ercoppa/boris-bar-gnome-extension.git ~/.local/share/gnome-shell/extensions/boris-bar@ercoppa.github.com
-   ```
-2. Compila lo schema dconf per gli shortcut globali:
-   ```bash
-   glib-compile-schemas ~/.local/share/gnome-shell/extensions/boris-bar@ercoppa.github.com/schemas/
-   ```
-3. Riavvia GNOME Shell:
-   - Su X11: `Alt+F2`, digita `r`, e premi Invio.
-   - Su Wayland: disconnettiti e riconnettiti.
-4. Abilita l'estensione tramite l'app **Estensioni** di GNOME o da terminale:
-   ```bash
-   gnome-extensions enable boris-bar@ercoppa.github.com
-   ```
-5. Importa localmente i clip audio dall'ultima release macOS originale, senza pubblicarli in questo repository:
-   ```bash
-   cd ~/.local/share/gnome-shell/extensions/boris-bar@ercoppa.github.com
-   chmod +x tools/import-audio-from-dmg.sh
-   ./tools/import-audio-from-dmg.sh
-   ```
+```powershell
+cd Z:\boris-bar-windows
+dotnet run --project src\BorisBar
+```
 
-Nota: l'estensione installata da questo repository contiene solo codice e asset grafici. Qualsiasi clip audio va reperito separatamente dall'utente e salvato in locale sotto la propria responsabilità.
+3. Import clips (see below).
+4. Left- or right-click the goldfish in the tray. On Windows 11, pin the icon in the taskbar corner overflow if it is hidden.
 
-### Import audio dalla release macOS originale
+Do not run `git` inside the VM on the shared folder. Commit from macOS.
 
-Per evitare di redistribuire i clip audio come artifact di questo repository, l'estensione puo' caricare i clip built-in dalla directory locale utente:
-`~/.local/share/boris-bar/builtin/`
+If `dotnet restore` or `dotnet build` is flaky on the `Z:` share, copy the tree to `C:\src\boris-bar-windows` and build there, or set a local output path:
 
-Lo script incluso scarica il DMG originale da:
+```powershell
+dotnet run --project src\BorisBar -p:BaseOutputPath=C:\build\boris-bar\
+```
+
+## Import audio from the original macOS release
+
+Built-in clips are loaded from:
+
+`%LOCALAPPDATA%\boris-bar\builtin`
+
+The bundled script downloads the original macOS DMG from:
+
 `https://github.com/andrearicciotti1/boris-bar/releases/download/v1.0/BorisBar-1.0.dmg`
 
-ed estrae i file audio in quella cartella locale. Lo script e l'estensione fungono solo da mezzo tecnico di import/riproduzione: la disponibilità dei file audio, i diritti d'uso e la conformità legale del download restano in capo all'utente. Requisiti minimi:
+and copies audio files into that folder. The script and the app only import and play; legality of the download and local use stays with the user.
 
-- `curl`
-- uno tra `7z`, `7zz`, `bsdtar`, `hdiutil`
-
-Esecuzione manuale:
-
-```bash
-cd ~/.local/share/gnome-shell/extensions/boris-bar@ercoppa.github.com
-chmod +x tools/import-audio-from-dmg.sh
-./tools/import-audio-from-dmg.sh
+```powershell
+cd Z:\boris-bar-windows
+Set-ExecutionPolicy -Scope Process Bypass
+.\tools\import-audio-from-dmg.ps1
 ```
 
-Se vuoi usare un URL diverso, puoi passarlo come primo argomento:
+Custom URL:
 
-```bash
-./tools/import-audio-from-dmg.sh "https://example.com/BorisBar.dmg"
+```powershell
+.\tools\import-audio-from-dmg.ps1 "https://example.com/BorisBar.dmg"
 ```
 
----
+Windows Media Foundation plays MP3, M4A, WAV, and most MP4 audio reliably. `.caf` / `.ogg` / `.aiff` may fail unless extra codecs are installed. If a clip is silent, convert it to `.m4a` or `.mp3` in the `builtin` folder.
 
-## 🎵 Aggiungere suoni personalizzati
+## Custom sounds
 
-I tuoi file audio custom (es. `mp3`, `wav`, `ogg`) vanno inseriti nella seguente cartella:
-`~/.local/share/boris-bar/custom/`
+Put `mp3`, `wav`, `m4a`, or other supported files in:
 
-Dal menu dell'estensione puoi cliccare su **Apri cartella suoni** per aprirla rapidamente.  
-Nome file = label nel menu (senza estensione).
+`%LOCALAPPDATA%\boris-bar\custom\`
 
----
+Use **Aggiungi suono personalizzato…** or **Apri cartella suoni**. The file name (without extension) is the menu label.
 
-## ⌨️ Shortcut globali predefiniti
+## Default hotkeys
 
-| Shortcut           | Clip |
-|--------------------|------|
-| `<Super><Alt>1`    | Fai uno sforzo |
-| `<Super><Alt>2`    | Tutti basiti |
-| `<Super><Alt>3`    | A cazzo di cane |
-| `<Super><Alt>4`    | F4 |
-| `<Super><Alt>5`    | Fiano Romano |
-| `<Super><Alt>6`    | Però sei molto italiano |
-| `<Super><Alt>7`    | Thank you for being so not italian |
-| `<Super><Alt>8`    | Io la mollo questa serie |
-| `<Super><Alt>9`    | Vuoi una pompa |
+| Shortcut     | Clip |
+|--------------|------|
+| `Win+Alt+1` | Fai uno sforzo |
+| `Win+Alt+2` | Tutti basiti |
+| `Win+Alt+3` | A cazzo di cane |
+| `Win+Alt+4` | F4 |
+| `Win+Alt+5` | Fiano Romano |
+| `Win+Alt+6` | Però sei molto italiano |
+| `Win+Alt+7` | Thank you for being so not italian |
+| `Win+Alt+8` | Io la mollo questa serie |
+| `Win+Alt+9` | Vuoi una pompa |
 
-Funzionano ovunque, anche senza aprire il menu. Ripremere lo stesso shortcut ferma la riproduzione.
-Puoi modificare questi shortcut tramite `dconf-editor` o da riga di comando navigando in:
-`/org/gnome/shell/extensions/boris-bar/`
+They work without opening the menu. Pressing the same shortcut again stops playback.
 
----
+In VMware Fusion, click the VM so it owns the keyboard; otherwise the Mac host eats `Win`/`Cmd`.
 
-## 🛠 Stack tecnico
+## Publish a self-contained exe
 
-- **GJS** (GNOME JavaScript)
-- **GStreamer (playbin)** per la riproduzione asincrona di audio senza bloccare il thread della Shell
-- **dconf / gschema** per la gestione dinamica degli shortcut globali (`Main.wm.addKeybinding`)
+Inside the VM:
 
----
+```powershell
+dotnet publish src\BorisBar -c Release -r win-arm64 --self-contained true -p:PublishSingleFile=true -o publish\arm64
+dotnet publish src\BorisBar -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o publish\x64
+```
 
-## 📜 Licenza e disclaimer
+Use `win-arm64` on Fusion/Apple Silicon VMs and `win-x64` on Intel Windows.
 
-### Codice sorgente
-Licenza [MIT](LICENSE) — libero uso, modifica, redistribuzione per il **codice**.
+## Stack
 
-### Contenuti audio (estratti della serie Boris)
-- **Questo progetto non redistribuisce clip audio.** Il repository pubblica solo il codice dell'estensione e gli asset non audio; eventuali file sonori devono essere ottenuti e conservati localmente dagli utenti sotto la loro esclusiva responsabilità.
-- **Non sono mia proprietà.** Tutti i diritti sui dialoghi, personaggi, opera originale appartengono a **RAI**, **Wildside**, **Sky**, **Mediaset**, **Disney+** e agli autori/interpreti della serie.
-- **Provenienza:** i clip audio di default sono stati **scaricati da YouTube**, estratti da video di terzi pubblicamente accessibili. L'autore di questa estensione GNOME non è la fonte originale.
-- **Uso:** esclusivamente illustrativo, satirico, di omaggio (*tribute*), educativo e di commento critico alla serie.
-- **Fair use / eccezioni copyright:** il progetto si appoggia ai principi di *fair use* (USA) e alle eccezioni previste dalla direttiva UE 2019/790 art. 17(7) e dall'art. 70 L. 633/1941.
+- .NET 8 / WinForms (`NotifyIcon`)
+- `RegisterHotKey` for `Win+Alt+1–9`
+- `Windows.Media.Playback.MediaPlayer` (Media Foundation)
+- `%LOCALAPPDATA%\boris-bar\` for user clips (same layout as `~/.local/share/boris-bar` on GNOME)
 
-### Nessuno scopo di lucro
-- ❌ Nessuna vendita, nessuna donazione, nessun annuncio pubblicitario, nessuna promozione a pagamento
-- ❌ Nessun paywall, nessun abbonamento, nessuna in-app purchase
-- ❌ Nessuna telemetria, nessuna analitica, nessun tracciamento utenti
-- ✅ Gratis, open source, auto-contenuto, offline
+## License and disclaimer
 
-### Nessuna affiliazione
-Boris Bar **non è** un prodotto ufficiale. **Non è** affiliato, sponsorizzato, approvato o in alcun modo connesso con RAI, Wildside, Sky, Mediaset, Disney+, gli autori o gli interpreti della serie *Boris*.
+### Source code
 
-### Takedown policy / contatto DMCA
-Se sei un detentore di diritti e vuoi la rimozione dei contenuti:
+[MIT](LICENSE) for the **code** and non-audio assets.
 
-🐛 Apri una [issue](https://github.com/ercoppa/boris-bar-gnome-extension/issues) su GitHub
+### Audio (excerpts from *Boris*)
 
-Per richieste valide, i file saranno rimossi **entro 24 ore dalla ricezione**.
+- This project does **not** redistribute audio clips.
+- Clips are not our property. Rights belong to RAI, Wildside, Sky, Mediaset, Disney+, and the authors/performers.
+- Use is tribute / illustration / commentary only, as described in `DISCLAIMER.txt`.
 
----
+Rights holders who want a takedown can open a GitHub issue on [this repository](https://github.com/cionz0/boris-bar-windows/issues).
 
 > *"Basito."*

@@ -1,12 +1,22 @@
-# Build artifacts
-BorisBar.app/
-dmg-staging/
-fish.iconset/
+# Build
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+publish/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+artifacts/
+
+# Generated Windows icon is committed; keep SVG sources
 *.dmg
 *.pkg
-
-# Generated icns (can be rebuilt from SVG)
-assets/AppIcon.icns
+BorisBar.app/
+dmg-staging/
 
 # Copyrighted audio — users must supply their own clips
 AUDIO/
@@ -17,16 +27,12 @@ assets/clips/*.wav
 assets/clips/*.aiff
 assets/clips/*.aif
 assets/clips/*.caf
+assets/clips/*.ogg
 
-# macOS cruft
+# macOS / editor cruft
 .DS_Store
 *.swp
+*~
 
-# Preview HTML (aux)
-boris_fish_preview.html
-
-# Unrelated projects in parent scratch dir
-SceneAnalyzer/
-.claude/
-
-# Plan file (scratch)
+# GNOME leftovers from the fork
+gschemas.compiled
