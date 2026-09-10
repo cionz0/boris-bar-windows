@@ -6,14 +6,14 @@
 .EXAMPLE
     .\tools\publish.ps1
     .\tools\publish.ps1 -All -Installer
-    .\tools\publish.ps1 -Runtime win-x64 -Version 0.2.0
+    .\tools\publish.ps1 -Runtime win-x64 -Version 0.2.1
 #>
 [CmdletBinding()]
 param(
     [string[]]$Runtime,
     [switch]$All,
     [switch]$Installer,
-    [string]$Version = "0.2.0",
+    [string]$Version = "0.2.1",
     [string]$OutputRoot
 )
 
@@ -59,13 +59,16 @@ function Find-InnoCompiler {
 function Get-AudioFiles {
     param([string]$Directory)
 
+    $files = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
     if (-not (Test-Path -LiteralPath $Directory)) {
-        return @()
+        return $files
     }
 
     $extensions = @(".mp3", ".mp4", ".m4a", ".wav", ".aiff", ".aif", ".caf", ".ogg")
-    return @(Get-ChildItem -LiteralPath $Directory -File -ErrorAction SilentlyContinue |
-        Where-Object { $extensions -contains $_.Extension.ToLowerInvariant() })
+    Get-ChildItem -LiteralPath $Directory -File -ErrorAction SilentlyContinue |
+        Where-Object { $extensions -contains $_.Extension.ToLowerInvariant() } |
+        ForEach-Object { [void]$files.Add($_) }
+    return $files
 }
 
 function Copy-ClipsToPublishDir {

@@ -97,8 +97,8 @@ GitHub **Actions artifacts** expire (often after 90 days). **GitHub Release** as
 Push a SemVer tag from macOS (not from the VM share):
 
 ```bash
-git tag v0.2.0
-git push origin v0.2.0
+git tag v0.2.1
+git push origin v0.2.1
 ```
 
 The [Release workflow](.github/workflows/release.yml) builds self-contained `win-x64` and `win-arm64` builds, packs the built-in clips into each, and attaches zip plus Inno Setup installers to that tag.
