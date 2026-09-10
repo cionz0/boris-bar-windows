@@ -5,9 +5,9 @@
 
 .DESCRIPTION
     Downloads the original Boris Bar macOS release DMG, extracts bundled audio
-    clips, and installs them into:
-
-      %LOCALAPPDATA%\boris-bar\builtin
+    clips, and copies them into -TargetDirectory (default:
+    %LOCALAPPDATA%\boris-bar\builtin). The Release workflow uses this at
+    build time to pack clips into the installer.
 
     Override the source DMG by passing a different URL as the first argument.
 
@@ -18,7 +18,9 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [string]$DmgUrl = "https://github.com/andrearicciotti1/boris-bar/releases/download/v1.0/BorisBar-1.0.dmg"
+    [string]$DmgUrl = "https://github.com/andrearicciotti1/boris-bar/releases/download/v1.0/BorisBar-1.0.dmg",
+
+    [string]$TargetDirectory
 )
 
 Set-StrictMode -Version Latest
@@ -97,7 +99,10 @@ if (-not $sevenZip) {
     Write-Error "Install 7-Zip (https://www.7-zip.org/) so 7z.exe can extract the DMG."
 }
 
-$targetDir = Join-Path $env:LOCALAPPDATA "boris-bar\builtin"
+$targetDir = $TargetDirectory
+if ([string]::IsNullOrWhiteSpace($targetDir)) {
+    $targetDir = Join-Path $env:LOCALAPPDATA "boris-bar\builtin"
+}
 $workDir = Join-Path ([System.IO.Path]::GetTempPath()) ("boris-bar-import-" + [guid]::NewGuid().ToString("N"))
 $dmgPath = Join-Path $workDir "BorisBar.dmg"
 $extractDir = Join-Path $workDir "extracted"

@@ -25,9 +25,24 @@ internal static class AppPaths
         }
     }
 
+    public static string? ExeDirectory
+    {
+        get
+        {
+            var path = Environment.ProcessPath;
+            return string.IsNullOrEmpty(path) ? null : Path.GetDirectoryName(path);
+        }
+    }
+
     public static IEnumerable<string> BuiltInCandidateDirs()
     {
         yield return Builtin;
+
+        if (ExeDirectory is string exeDir)
+        {
+            yield return Path.Combine(exeDir, "assets", "clips");
+            yield return Path.Combine(exeDir, "assets", "clips", "Archive");
+        }
 
         var assets = Path.Combine(AppContext.BaseDirectory, "assets");
         yield return Path.Combine(assets, "clips");

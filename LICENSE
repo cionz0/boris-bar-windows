@@ -32,12 +32,12 @@ Credit is preserved for the original Boris Bar macOS app concept created by
 Andrea Ricciotti / PunxCode, and for the GNOME Shell port this Windows app
 is forked from.
 
-This Windows repository does not attach or redistribute audio files.
-Any clips an end user imports locally (for example from the original macOS
-DMG) are NOT covered by this license. Those clips are short excerpts from
-the Italian television series "Boris" (2007-2022), which is the
-intellectual property of its respective rights holders, including but not
-limited to:
+The git repository does not contain audio files. GitHub Release
+installers and zips may include the same demonstration clips shipped in
+the original macOS DMG; those files are NOT covered by the MIT license.
+They are short excerpts from the Italian television series "Boris"
+(2007-2022), which is the intellectual property of its respective
+rights holders, including but not limited to:
 
   - RAI (Radiotelevisione Italiana)
   - Wildside S.r.l.

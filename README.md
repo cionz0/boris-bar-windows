@@ -2,8 +2,7 @@
 
 > **NON-COMMERCIAL FAN PROJECT**  
 > This is a free, amateur, open-source, non-profit fan project inspired by the Italian TV series *Boris*. It is not affiliated with, sponsored by, approved by, or connected to RAI, Wildside, Sky, Mediaset, Disney+, or the authors, directors, cast, or rights holders of the series.  
-> This repository **does not distribute audio files**. It only provides a tray player and global hotkeys. Obtaining clips and checking that local use is lawful is **the user's sole responsibility**.  
-> **No revenue, donations, advertising, or monetization** is associated with this project.
+> This Git **repository** does not contain audio files. The Windows **installer and zip on GitHub Releases** include the same demonstration clips shipped in the original [macOS DMG](https://github.com/andrearicciotti1/boris-bar). Those clips are not owned by this project. **No revenue, donations, advertising, or monetization** is associated with this project.
 
 Windows 10/11 tray app at [cionz0/boris-bar-windows](https://github.com/cionz0/boris-bar-windows), based on Emilio Coppa's [GNOME Shell extension](https://github.com/ercoppa/boris-bar-gnome-extension). The original *Boris Bar* concept comes from [Andrea Ricciotti's macOS app](https://github.com/andrearicciotti1/boris-bar).
 
@@ -12,7 +11,7 @@ Zero extra NuGet dependencies. .NET 8, WinForms tray icon, Windows Media Foundat
 ## Features
 
 - Goldfish icon in the notification area (system tray)
-- 9 built-in clips with global hotkeys `Win+Alt+1` … `Win+Alt+9`
+- 9 built-in clips (included in the installer/zip) with global hotkeys `Win+Alt+1` … `Win+Alt+9`
 - Custom sounds in `%LOCALAPPDATA%\boris-bar\custom\`
 - Max duration 30 seconds; press the same hotkey again (or the same menu item) to stop
 - Optional start with Windows (parity with a GNOME extension that loads at login)
@@ -21,7 +20,7 @@ Zero extra NuGet dependencies. .NET 8, WinForms tray icon, Windows Media Foundat
 
 - Windows 10 version 1809 (build 17763) or later, or Windows 11
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) to build (`dotnet run` / `dotnet publish`)
-- For the optional DMG import: [7-Zip](https://www.7-zip.org/) and `curl.exe` (already on Windows 10 1803+)
+- [7-Zip](https://www.7-zip.org/) only if you rebuild packages locally (the release workflow packs clips at build time)
 
 x64 and ARM64 guests are both fine. On VMware Fusion on Apple Silicon, use an ARM64 Windows VM and run `dotnet run` inside the guest (it targets the VM architecture automatically).
 
@@ -37,8 +36,7 @@ cd Z:\boris-bar-windows
 dotnet run --project src\BorisBar
 ```
 
-3. Import clips (see below).
-4. Left- or right-click the goldfish in the tray. On Windows 11, pin the icon in the taskbar corner overflow if it is hidden.
+3. Left- or right-click the goldfish in the tray. On Windows 11, pin the icon in the taskbar corner overflow if it is hidden. Release installers already include the built-in clips. For `dotnet run` from source, either install a Release build or run `.\tools\import-audio-from-dmg.ps1 -TargetDirectory assets\clips` once.
 
 Do not run `git` inside the VM on the shared folder. Commit from macOS.
 
@@ -48,31 +46,22 @@ If `dotnet restore` or `dotnet build` is flaky on the `Z:` share, copy the tree 
 dotnet run --project src\BorisBar -p:BaseOutputPath=C:\build\boris-bar\
 ```
 
-## Import audio from the original macOS release
+## Built-in clips
 
-Built-in clips are loaded from:
+The GitHub **installer and zip** ship the same demonstration clips as Andrea Ricciotti's [macOS app](https://github.com/andrearicciotti1/boris-bar). They are packed at **build time** into `assets\clips` next to `BorisBar.exe`. End users do not download a DMG.
 
-`%LOCALAPPDATA%\boris-bar\builtin`
+Those files are **not** in git (`assets/clips/` is gitignored). The Release workflow downloads the original macOS DMG only on the build machine, extracts the audio, and puts it inside the setup/zip.
 
-The bundled script downloads the original macOS DMG from:
-
-`https://github.com/andrearicciotti1/boris-bar/releases/download/v1.0/BorisBar-1.0.dmg`
-
-and copies audio files into that folder. The script and the app only import and play; legality of the download and local use stays with the user.
+To pack a local build:
 
 ```powershell
-cd Z:\boris-bar-windows
-Set-ExecutionPolicy -Scope Process Bypass
-.\tools\import-audio-from-dmg.ps1
+.\tools\import-audio-from-dmg.ps1 -TargetDirectory assets\clips
+.\tools\publish.ps1 -All -Installer
 ```
 
-Custom URL:
+You can still override or replace a clip by copying a file into `%LOCALAPPDATA%\boris-bar\builtin` (checked first).
 
-```powershell
-.\tools\import-audio-from-dmg.ps1 "https://example.com/BorisBar.dmg"
-```
-
-Windows Media Foundation plays MP3, M4A, WAV, and most MP4 audio reliably. `.caf` / `.ogg` / `.aiff` may fail unless extra codecs are installed. If a clip is silent, convert it to `.m4a` or `.mp3` in the `builtin` folder.
+Windows Media Foundation plays MP3, M4A, WAV, and most MP4 audio reliably. `.caf` / `.ogg` / `.aiff` may fail unless extra codecs are installed.
 
 ## Custom sounds
 
@@ -108,11 +97,11 @@ GitHub **Actions artifacts** expire (often after 90 days). **GitHub Release** as
 Push a SemVer tag from macOS (not from the VM share):
 
 ```bash
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
-The [Release workflow](.github/workflows/release.yml) builds self-contained `win-x64` and `win-arm64` builds, an Inno Setup installer for each, and attaches them to that tag. No audio files are included.
+The [Release workflow](.github/workflows/release.yml) builds self-contained `win-x64` and `win-arm64` builds, packs the built-in clips into each, and attaches zip plus Inno Setup installers to that tag.
 
 Locally, inside the VM (optional, same script the workflow uses):
 
@@ -146,7 +135,8 @@ Use the **x64** installer on typical Intel/AMD PCs. Use **arm64** on Windows on 
 
 ### Audio (excerpts from *Boris*)
 
-- This project does **not** redistribute audio clips.
+- The **git repository** does not contain audio files.
+- GitHub Release **installers and zips** include the same short demonstration clips as the original macOS DMG, packed at build time.
 - Clips are not our property. Rights belong to RAI, Wildside, Sky, Mediaset, Disney+, and the authors/performers.
 - Use is tribute / illustration / commentary only, as described in `DISCLAIMER.txt`.
 

@@ -6,14 +6,14 @@
 .EXAMPLE
     .\tools\publish.ps1
     .\tools\publish.ps1 -All -Installer
-    .\tools\publish.ps1 -Runtime win-x64 -Version 0.1.0
+    .\tools\publish.ps1 -Runtime win-x64 -Version 0.2.0
 #>
 [CmdletBinding()]
 param(
     [string[]]$Runtime,
     [switch]$All,
     [switch]$Installer,
-    [string]$Version = "0.1.0",
+    [string]$Version = "0.2.0",
     [string]$OutputRoot
 )
 
@@ -56,7 +56,45 @@ function Find-InnoCompiler {
     return $null
 }
 
+function Get-AudioFiles {
+    param([string]$Directory)
+
+    if (-not (Test-Path -LiteralPath $Directory)) {
+        return @()
+    }
+
+    $extensions = @(".mp3", ".mp4", ".m4a", ".wav", ".aiff", ".aif", ".caf", ".ogg")
+    return @(Get-ChildItem -LiteralPath $Directory -File -ErrorAction SilentlyContinue |
+        Where-Object { $extensions -contains $_.Extension.ToLowerInvariant() })
+}
+
+function Copy-ClipsToPublishDir {
+    param(
+        [string]$SourceDir,
+        [string]$PublishDir
+    )
+
+    $dest = Join-Path $PublishDir "assets\clips"
+    New-Item -ItemType Directory -Path $dest -Force | Out-Null
+    foreach ($file in (Get-AudioFiles $SourceDir)) {
+        Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $dest $file.Name) -Force
+    }
+}
+
 New-Item -ItemType Directory -Path $OutputRoot -Force | Out-Null
+
+$clipsStaging = Join-Path $repoRoot "assets\clips"
+if ((Get-AudioFiles $clipsStaging).Count -eq 0) {
+    Write-Host "Packing built-in clips from the original macOS DMG (build time only; not a runtime download)"
+    & (Join-Path $PSScriptRoot "import-audio-from-dmg.ps1") -TargetDirectory $clipsStaging
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to fetch built-in clips for the installer."
+    }
+}
+
+if ((Get-AudioFiles $clipsStaging).Count -eq 0) {
+    Write-Error "No built-in audio clips found to include in the installer."
+}
 
 foreach ($rid in $Runtime) {
     $outDir = Join-Path $OutputRoot $rid
@@ -77,6 +115,8 @@ foreach ($rid in $Runtime) {
     if ($LASTEXITCODE -ne 0) {
         Write-Error "dotnet publish failed for $rid (exit code $LASTEXITCODE)."
     }
+
+    Copy-ClipsToPublishDir -SourceDir $clipsStaging -PublishDir $outDir
 
     $zipPath = Join-Path $OutputRoot "BorisBar-$Version-$rid.zip"
     if (Test-Path -LiteralPath $zipPath) {

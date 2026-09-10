@@ -11,11 +11,11 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <RootNamespace>BorisBar</RootNamespace>
     <AssemblyName>BorisBar</AssemblyName>
-    <Version>0.1.1</Version>
-    <InformationalVersion>0.1.1</InformationalVersion>
+    <Version>0.2.0</Version>
+    <InformationalVersion>0.2.0</InformationalVersion>
     <Authors>Vincenzo Roselli</Authors>
     <Product>Boris Bar</Product>
-    <Description>Windows tray soundboard inspired by the Italian TV series Boris. No audio files are redistributed.</Description>
+    <Description>Windows tray soundboard inspired by the Italian TV series Boris.</Description>
     <NeutralLanguage>it</NeutralLanguage>
   </PropertyGroup>
 
@@ -27,6 +27,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\DISCLAIMER.txt" Link="DISCLAIMER.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\assets\clips\**\*.*" Link="assets\clips\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

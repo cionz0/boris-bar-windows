@@ -18,16 +18,9 @@ artifacts/
 BorisBar.app/
 dmg-staging/
 
-# Copyrighted audio — users must supply their own clips
+assets/clips/**
+!assets/clips/.gitkeep
 AUDIO/
-assets/clips/*.mp3
-assets/clips/*.mp4
-assets/clips/*.m4a
-assets/clips/*.wav
-assets/clips/*.aiff
-assets/clips/*.aif
-assets/clips/*.caf
-assets/clips/*.ogg
 
 # macOS / editor cruft
 .DS_Store
