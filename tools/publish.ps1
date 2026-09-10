@@ -6,14 +6,14 @@
 .EXAMPLE
     .\tools\publish.ps1
     .\tools\publish.ps1 -All -Installer
-    .\tools\publish.ps1 -Runtime win-x64 -Version 0.2.1
+    .\tools\publish.ps1 -Runtime win-x64 -Version 0.2.2
 #>
 [CmdletBinding()]
 param(
     [string[]]$Runtime,
     [switch]$All,
     [switch]$Installer,
-    [string]$Version = "0.2.1",
+    [string]$Version = "0.2.2",
     [string]$OutputRoot
 )
 
@@ -56,19 +56,18 @@ function Find-InnoCompiler {
     return $null
 }
 
-function Get-AudioFiles {
+function Test-HasAudioFiles {
     param([string]$Directory)
 
-    $files = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
     if (-not (Test-Path -LiteralPath $Directory)) {
-        return $files
+        return $false
     }
 
     $extensions = @(".mp3", ".mp4", ".m4a", ".wav", ".aiff", ".aif", ".caf", ".ogg")
-    Get-ChildItem -LiteralPath $Directory -File -ErrorAction SilentlyContinue |
+    $hit = Get-ChildItem -LiteralPath $Directory -File -ErrorAction SilentlyContinue |
         Where-Object { $extensions -contains $_.Extension.ToLowerInvariant() } |
-        ForEach-Object { [void]$files.Add($_) }
-    return $files
+        Select-Object -First 1
+    return $null -ne $hit
 }
 
 function Copy-ClipsToPublishDir {
@@ -79,15 +78,18 @@ function Copy-ClipsToPublishDir {
 
     $dest = Join-Path $PublishDir "assets\clips"
     New-Item -ItemType Directory -Path $dest -Force | Out-Null
-    foreach ($file in (Get-AudioFiles $SourceDir)) {
-        Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $dest $file.Name) -Force
-    }
+    $extensions = @(".mp3", ".mp4", ".m4a", ".wav", ".aiff", ".aif", ".caf", ".ogg")
+    Get-ChildItem -LiteralPath $SourceDir -File -ErrorAction SilentlyContinue |
+        Where-Object { $extensions -contains $_.Extension.ToLowerInvariant() } |
+        ForEach-Object {
+            Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $dest $_.Name) -Force
+        }
 }
 
 New-Item -ItemType Directory -Path $OutputRoot -Force | Out-Null
 
 $clipsStaging = Join-Path $repoRoot "assets\clips"
-if ((Get-AudioFiles $clipsStaging).Count -eq 0) {
+if (-not (Test-HasAudioFiles $clipsStaging)) {
     Write-Host "Packing built-in clips from the original macOS DMG (build time only; not a runtime download)"
     & (Join-Path $PSScriptRoot "import-audio-from-dmg.ps1") -TargetDirectory $clipsStaging
     if ($LASTEXITCODE -ne 0) {
@@ -95,7 +97,7 @@ if ((Get-AudioFiles $clipsStaging).Count -eq 0) {
     }
 }
 
-if ((Get-AudioFiles $clipsStaging).Count -eq 0) {
+if (-not (Test-HasAudioFiles $clipsStaging)) {
     Write-Error "No built-in audio clips found to include in the installer."
 }
 
