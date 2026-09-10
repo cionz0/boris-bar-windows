@@ -16,6 +16,27 @@ Zero extra NuGet dependencies. .NET 8, WinForms tray icon, Windows Media Foundat
 - Max duration 30 seconds; press the same hotkey again (or the same menu item) to stop
 - Optional start with Windows (parity with a GNOME extension that loads at login)
 
+## Install from a GitHub Release
+
+Download the installer or zip from [Releases](https://github.com/cionz0/boris-bar-windows/releases):
+
+- **x64** (`win-x64`) — typical Intel/AMD PCs
+- **arm64** (`win-arm64`) — Windows on ARM (including VMware Fusion on Apple Silicon)
+
+The builds are **not code-signed**. Microsoft Defender SmartScreen will often show **PC protetto da Windows** / *Windows protected your PC* because the publisher is unrecognized. That is expected.
+
+1. When SmartScreen appears, click **Ulteriori informazioni** / **More info**.
+2. Click **Esegui comunque** / **Run anyway**.
+3. If that button is missing: right-click the `.exe` → **Proprietà** / **Properties** → enable **Sblocca** / **Unblock** → **OK**, then run it again.
+
+Same unblock from PowerShell:
+
+```powershell
+Unblock-File .\BorisBar-*-setup.exe
+```
+
+Do not turn off real-time protection. After install, look for the goldfish in the notification area. On Windows 11, pin it in the taskbar corner overflow if it is hidden.
+
 ## Requirements
 
 - Windows 10 version 1809 (build 17763) or later, or Windows 11
