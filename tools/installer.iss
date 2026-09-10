@@ -23,7 +23,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\publish
-OutputBaseName=BorisBar-{#MyAppVersion}-{#Rid}-setup
+OutputBaseFilename=BorisBar-{#MyAppVersion}-{#Rid}-setup
 SetupIconFile=..\assets\fish.ico
 Compression=lzma2
 SolidCompression=yes
@@ -50,6 +50,7 @@ Name: "startup"; Description: "Avvia Boris Bar all'accesso di Windows"; Flags: u
 
 [Files]
 Source: "..\publish\{#Rid}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+Source: "..\tools\import-audio-from-dmg.ps1"; DestDir: "{app}\tools"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

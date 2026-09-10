@@ -11,8 +11,8 @@
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <RootNamespace>BorisBar</RootNamespace>
     <AssemblyName>BorisBar</AssemblyName>
-    <Version>0.1.0</Version>
-    <InformationalVersion>0.1.0</InformationalVersion>
+    <Version>0.1.1</Version>
+    <InformationalVersion>0.1.1</InformationalVersion>
     <Authors>Vincenzo Roselli</Authors>
     <Product>Boris Bar</Product>
     <Description>Windows tray soundboard inspired by the Italian TV series Boris. No audio files are redistributed.</Description>
